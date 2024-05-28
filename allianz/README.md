@@ -1,5 +1,5 @@
 The Structure of the HelmChart:
-
+```
 allianz/​
 |-- templates/​
 |    |-- configmap.yaml​
@@ -9,7 +9,7 @@ allianz/​
 |    |-- service.yaml​
 |-- chart.yaml​
 |-- values.yaml
-
+```
 
 the ${IMAGE_TAG} will get from CI successfull flow
 
@@ -135,7 +135,7 @@ The Traffic Flow:
                                                               | (frontend)    |
                                                               +---------------+
 
-
+```
 graph TD;
     A[Developer Pushes Code] -->|1. Code Push| B[Git Repository]
     B -->|2. Jenkins Polls Repository| C[Jenkins Server]
@@ -162,3 +162,4 @@ graph TD;
     F1 --> F4
     F2 --> F4
     F3 --> F4
+```
