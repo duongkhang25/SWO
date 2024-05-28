@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: application-config
+  namespace: imobill
+data:
+  application.yml: |
+    {{ (.Files.Get (printf "config/%s" .Values.global.configFile)) | indent 4 }}

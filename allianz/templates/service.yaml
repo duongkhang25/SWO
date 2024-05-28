@@ -1,0 +1,31 @@
+{{- range .Values.microservices }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}-service
+  namespace: imobill
+  labels:
+    app: {{ .name }}
+    environment: {{ $.Values.global.environment }}
+spec:
+  ports:
+    - port: {{ .port }}
+      targetPort: {{ .port }}
+  selector:
+    app: {{ .name }}
+    environment: {{ $.Values.global.environment }}
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.name }}
+  namespace: imobill
+spec:
+  selector:
+    app: {{ .Values.frontend.name }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
