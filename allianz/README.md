@@ -11,13 +11,13 @@ allianz/​
 |-- values.yaml
 ```
 
-the ${IMAGE_TAG} will get from CI successfull flow
+**The ${IMAGE_TAG} will get from CI successfull flow**
 
-'Deploy to QA'
-        sh 'helm upgrade --install allianz ./allianz --namespace imobill --set global.imageTag=${IMAGE_TAG} --set global.environment=qa'
-
-'Deploy to PROD'
-        sh 'helm upgrade --install java-microservices-prod ./allianz --namespace imobill --set global.imageTag=${IMAGE_TAG} --set global.environment=prod'
+- Deploy to QA:
+        - sh 'helm upgrade --install allianz ./allianz --namespace imobill --set global.imageTag=${IMAGE_TAG} --set global.environment=qa'
+  
+- Deploy to PROD:
+        - sh 'helm upgrade --install java-microservices-prod ./allianz --namespace imobill --set global.imageTag=${IMAGE_TAG} --set global.environment=prod'
 
 
 
