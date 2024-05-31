@@ -12,53 +12,70 @@ global:
       cpu: "200m"
       memory: "256Mi"
   hpa:
-    enabled: true
+    enabled: false
     minReplicas: 1
     maxReplicas: 5
     targetCPUUtilizationPercentage: 80
-  configFile: "application-qa.yml"  # Specify the config file for the environment
+  configFile: "application.yml"  # Specify the config file for the environment
 
 microservices:
-  - name: audit-service
+  audit-service:
+    enabled: false
     port: 8080
-  - name: bill-gate
+  bill-gate:
+    enabled: false
     port: 8080
-  - name: category-service
+  category-service:
+    enabled: false
     port: 8080
-  - name: identity-service
+  identity-service:
+    enabled: false
     port: 8080
-  - name: increment-service
+  increment-service:
+    enabled: false
     port: 8080
-  - name: integration-service
+  integration-service:
+    enabled: false
     port: 8080
-  - name: invoice-service
+  invoice-service:
+    enabled: false
     port: 8080
-  - name: notification-service
+  notification-service:
+    enabled: false
     port: 8080
-  - name: pre-sign-service
+  pre-sign-service:
+    enabled: false
     port: 8080
-  - name: receive-gate
+  receive-gate:
+    enabled: false
     port: 8080
-  - name: report-service
+  report-service:
+    enabled: false
     port: 8080
-  - name: searchstatusirbm-service
+  searchstatusirbm-service:
+    enabled: false
     port: 8080
-  - name: send-gate
+  send-gate:
+    enabled: false
     port: 8080
-  - name: sign-service
+  sign-service:
+    enabled: false
     port: 8080
-  - name: xml-service
+  xml-service:
+    enabled: false
     port: 8080
 
 frontend:
   name: react-frontend
+  enabled: false
   port: 80
 
-
 ingress:
-  enabled: true
+  enabled: false
+  tlsSecretName: my-tls-secret
   annotations:
     kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
     alb.ingress.kubernetes.io/scheme: "internet-facing"
     alb.ingress.kubernetes.io/target-type: "ip"
     alb.ingress.kubernetes.io/load-balancer-attributes: "idle_timeout.timeout_seconds=600"

@@ -1,8 +1,18 @@
+{{- range $name, $service := .Values.microservices }}
+{{- if $service.enabled }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: application-config
+  name: {{ $name }}-config
   namespace: imobill
 data:
   application.yml: |
-    {{ (.Files.Get (printf "config/%s" .Values.global.configFile)) | indent 4 }}
+    {{ (.Files.Get "application.yml") | indent 4 }}
+{{- end }}
+{{- end }}
+
+
+
+# helm upgrade --install allianz./allianz--namespace imobill   --set-file application.yml=applicationrepo/config/audit-service-configmap-qa.yaml
+

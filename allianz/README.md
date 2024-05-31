@@ -1,4 +1,5 @@
-The Structure of the HelmChart:
+**The Structure of the HelmChart:**
+
 ```
 allianz/​
 |-- templates/​
@@ -11,15 +12,56 @@ allianz/​
 |-- values.yaml
 ```
 
-**The ${IMAGE_TAG} will get from CI successfull flow**
+Structure of application repo:
 
-- Deploy to QA:
-        - sh 'helm upgrade --install allianz ./allianz --namespace imobill --set global.imageTag=${IMAGE_TAG} --set global.environment=qa'
-  
-- Deploy to PROD:
-        - sh 'helm upgrade --install java-microservices-prod ./allianz --namespace imobill --set global.imageTag=${IMAGE_TAG} --set global.environment=prod'
+```
+einvoice-service-name/
+|-- target/
+| |-- *.jar
+|-- Certs/
+| |-- cacerts.cert
+|-- *.dockerfile
+|-- Jenkins/
+| |-- CI/
+| | |-- jenkinsfile
+| |-- CD/
+| | |-- jenkinsfile
+|-- manifest/
+| |-- service-name-values-qa.yaml
+| |-- service-name-values-prod.yaml
+|-- configmap/
+| |-- service-name-configmap-qa.yaml
+| |-- service-name-configmap-prod.yaml
+```
+
+# Description
+
+1. Developer: Pushes code changes to the Git repository.
+2. Git Repository: Hosts the source code for the application and the Helm chart.
+3. Jenkins Server: Jenkins server polls the Git repository for changes.
+4. CI Pipeline Starts: When changes are detected, the CI pipeline starts.
+5. Pull Helm Chart Repo: Jenkins pulls the Helm chart repository with the structure of helm
+6. Pull Application Repos: Jenkins pulls the application repositories with the structure
+7. Determine Environment (QA/PROD): Jenkins determines the target environment.
+8. Replace Config Files:
+  * Jenkins replaces application.yaml in the Helm chart repo by the content of -applicationrepo/config/audit-service-configmap-qa.yaml from the application repo.
+9. Use Environment-specific Values File:
+  * Jenkins uses manifest/service-name-values-<env>.yaml in the Helm upgrade command.
+10. Deploy
 
 
+# How to Deploy Specific Services
+
+- To deploy only specific services, you can use a custom values file or the --set option with Helm.
+
+
+ **helm upgrade --install allianz ./allianz --namespace imobill -f applicationrepo/manifest/service-name-values-qa.yaml  --set-file application.yml=applicationrepo/config/audit-service-configmap-qa.yaml --set microservices.bill-gate.enabled=true  --set frontend.enabled=false**
+
+# To create secret for cert and key use for ingress https forward
+
+```
+kubectl create secret tls my-tls-secret --cert=path/to/tls.crt --key=path/to/tls.key -n imobill
+```
 
 # Set up AWS Load Balancer Controller
 

@@ -1,31 +1,42 @@
+{{- if .Values.ingress.enabled }}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: java-react-ingress
   namespace: imobill
   annotations:
-    kubernetes.io/ingress.class: "alb"
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: <your-acm-certificate-arn> # if using HTTPs need the certificate for ingress
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
 spec:
+  tls:
+  - hosts:
+    - {{ .Values.ingress.host }}
+    secretName: {{ .Values.ingress.tlsSecretName }}
   rules:
-    - host: example.com
+    - host: {{ .Values.ingress.host }}
       http:
         paths:
-{{- range .Values.microservices }}
-          - path: /{{ .name }}/*
+{{- range $name, $service := .Values.microservices }}
+{{- if $service.enabled }}
+          - path: /{{ $name }}/*
             pathType: Prefix
             backend:
               service:
-                name: {{ .name }}
+                name: {{ $name }}-service
                 port:
-                  number: 8080
+                  number: {{ $service.port }}
 {{- end }}
+{{- end }}
+{{- if .Values.frontend.enabled }}
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: react-frontend
+                name: {{ .Values.frontend.name }}-service
                 port:
-                  number: 80
+                  number: {{ .Values.frontend.port }}
+{{- end }}
+---
+{{- end }}

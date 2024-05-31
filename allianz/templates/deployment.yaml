@@ -1,34 +1,35 @@
-{{- range .Values.microservices }}
+{{- range $name, $service := .Values.microservices }}
+{{- if $service.enabled }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .name }}-deployment
+  name: {{ $name }}-deployment
   namespace: imobill
   labels:
-    app: {{ .name }}
+    app: {{ $name }}
     environment: {{ $.Values.global.environment }}
 spec:
   replicas: {{ $.Values.global.replicas }}
   selector:
     matchLabels:
-      app: {{ .name }}
+      app: {{ $name }}
       environment: {{ $.Values.global.environment }}
   template:
     metadata:
       labels:
-        app: {{ .name }}
+        app: {{ $name }}
         environment: {{ $.Values.global.environment }}
     spec:
       imagePullSecrets:
         {{- range $.Values.global.imagePullSecrets }}
-        - name: {{ . }}
+        - name: {{ .name }}
         {{- end }}
       containers:
-        - name: {{ .name }}
-          image: myregistry.com/{{ .name }}:{{ $.Values.global.imageTag }}
+        - name: {{ $name }}
+          image: myregistry.com/{{ $name }}:{{ $.Values.global.imageTag }}
           ports:
-            - containerPort: {{ .port }}
+            - containerPort: {{ $service.port }}
           resources:
             requests:
               cpu: {{ $.Values.global.resources.requests.cpu }}
@@ -46,25 +47,45 @@ spec:
             name: application-config
 ---
 {{- end }}
+{{- end }}
+
+{{- if .Values.frontend.enabled }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.frontend.name }}
+  name: {{ .Values.frontend.name }}-deployment
   namespace: imobill
   labels:
     app: {{ .Values.frontend.name }}
+    environment: {{ $.Values.global.environment }}
 spec:
   replicas: {{ $.Values.global.replicas }}
   selector:
     matchLabels:
       app: {{ .Values.frontend.name }}
+      environment: {{ $.Values.global.environment }}
   template:
     metadata:
       labels:
         app: {{ .Values.frontend.name }}
+        environment: {{ $.Values.global.environment }}
     spec:
+      imagePullSecrets:
+        {{- range $.Values.global.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
       containers:
         - name: {{ .Values.frontend.name }}
           image: myregistry.com/{{ .Values.frontend.name }}:{{ $.Values.global.imageTag }}
           ports:
-            - containerPort: 80
+            - containerPort: {{ .Values.frontend.port }}
+          resources:
+            requests:
+              cpu: {{ $.Values.global.resources.requests.cpu }}
+              memory: {{ $.Values.global.resources.requests.memory }}
+            limits:
+              cpu: {{ $.Values.global.resources.limits.cpu }}
+              memory: {{ $.Values.global.resources.limits.memory }}
+---
+{{- end }}

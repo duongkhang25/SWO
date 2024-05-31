@@ -1,16 +1,17 @@
 {{- if .Values.global.hpa.enabled }}
-{{- range .Values.microservices }}
+{{- range $name, $service := .Values.microservices }}
+{{- if $service.enabled }}
 ---
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ .name }}-hpa
+  name: {{ $name }}-hpa
   namespace: imobill
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .name }}-deployment
+    name: {{ $name }}-deployment
   minReplicas: {{ $.Values.global.hpa.minReplicas }}
   maxReplicas: {{ $.Values.global.hpa.maxReplicas }}
   metrics:
@@ -20,5 +21,31 @@ spec:
       target:
         type: Utilization
         averageUtilization: {{ $.Values.global.hpa.targetCPUUtilizationPercentage }}
+---
+{{- end }}
+{{- end }}
+
+{{- if .Values.frontend.enabled }}
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.frontend.name }}-hpa
+  namespace: imobill
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.frontend.name }}-deployment
+  minReplicas: {{ $.Values.global.hpa.minReplicas }}
+  maxReplicas: {{ $.Values.global.hpa.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ $.Values.global.hpa.targetCPUUtilizationPercentage }}
+---
 {{- end }}
 {{- end }}

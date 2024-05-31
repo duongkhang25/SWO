@@ -1,31 +1,35 @@
-{{- range .Values.microservices }}
+{{- range $name, $service := .Values.microservices }}
+{{- if $service.enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .name }}-service
+  name: {{ $name }}-service
   namespace: imobill
-  labels:
-    app: {{ .name }}
-    environment: {{ $.Values.global.environment }}
 spec:
-  ports:
-    - port: {{ .port }}
-      targetPort: {{ .port }}
   selector:
-    app: {{ .name }}
-    environment: {{ $.Values.global.environment }}
+    app: {{ $name }}
+  ports:
+    - protocol: TCP
+      port: {{ $service.port }}
+      targetPort: {{ $service.port }}
 ---
 {{- end }}
+{{- end }}
+
+{{- if .Values.frontend.enabled }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.frontend.name }}
+  name: {{ .Values.frontend.name }}-service
   namespace: imobill
 spec:
   selector:
     app: {{ .Values.frontend.name }}
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
+      port: {{ .Values.frontend.port }}
+      targetPort: {{ .Values.frontend.port }}
+---
+{{- end }}
