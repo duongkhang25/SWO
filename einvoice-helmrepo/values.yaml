@@ -1,0 +1,112 @@
+global:
+  imagePullSecrets:
+    - name: my-registry-key
+  environment: qa
+  registry: <aws_account_id>.dkr.ecr.<region>.amazonaws.com
+  replicas: 1
+  imageTag: "latest"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "500m"
+    limits:
+      memory: "512Mi"
+      cpu: "1"
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+applicationYml: ""
+
+keycloak:
+  enabled: false
+  replicas: 1
+  image:
+    repository: <aws_account_id>.dkr.ecr.<region>.amazonaws.com/keycloak
+    tag: latest
+  service:
+    type: LoadBalancer
+    port: 8080
+    targetPort: 8080
+    ports:
+      - name: http
+        port: 8080
+        targetPort: 8080
+      - name: https
+        port: 8443
+        targetPort: 8443
+  env:
+    KEYCLOAK_ADMIN: "admin"
+    KEYCLOAK_ADMIN_PASSWORD: "admin"
+    DB_VENDOR: "postgres"
+    DB_ADDR: "IP"
+    DB_PORT: "Port"
+    DB_DATABASE: "db1"
+    DB_USER: "DB_USER"
+    DB_PASSWORD: "DB_PASSWORD"
+  imagePullSecrets:
+    - name: my-registry-key  # ECR secret key
+
+microservices:
+  einvoice-audit-service:
+    enabled: false
+    port: 8443
+  einvoice-bill-gate:
+    enabled: false
+    port: 8443
+  einvoice-category-service:
+    enabled: false
+    port: 8443
+  einvoice-identity-service:
+    enabled: false
+    port: 8443
+  einvoice-increment-service:
+    enabled: false
+    port: 8443
+  einvoice-integration-service:
+    enabled: false
+    port: 8443
+  einvoice-invoice-service:
+    enabled: false
+    port: 8443
+  einvoice-notification-service:
+    enabled: false
+    port: 8443
+  einvoice-pre-sign-service:
+    enabled: false
+    port: 8443
+  einvoice-receive-gate:
+    enabled: false
+    port: 8443
+  einvoice-report-service:
+    enabled: false
+    port: 8443
+  einvoice-searchstatusirbm-service:
+    enabled: false
+    port: 8443
+  einvoice-send-gate:
+    enabled: false
+    port: 8443
+  einvoice-sign-service:
+    enabled: false
+    port: 8443
+  einvoice-xml-service:
+    enabled: false
+    port: 8443
+
+frontend:
+  name: react-frontend
+  enabled: false
+  port: 80
+
+ingress:
+  enabled: false
+  tlsSecretName: my-tls-secret
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/affinity: cookie
+    nginx.ingress.kubernetes.io/affinity-mode: persistent
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  host: mydomain.com

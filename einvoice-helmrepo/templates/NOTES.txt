@@ -1,0 +1,47 @@
+##############################################
+# Post-Deployment Information
+##############################################
+
+Release Name: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+App Version: {{ .Chart.AppVersion }}
+
+To verify the deployment, run the following commands:
+
+1. Check the status of the release:
+   helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+2. List all resources created by this release:
+   kubectl get all -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}
+
+3. Describe the deployment:
+   kubectl describe deployment {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+4. Check the logs of the deployed pods:
+   kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}
+
+5. Get the backend-services details:
+{{- range $svc := .Values.microservices }}
+   kubectl get svc {{ $svc }} -n {{ $.Release.Namespace }}
+{{- end }}
+
+6. Get the Frontend-services details:
+   kubectl get svc {{ .Values.frontend.name }} -n {{ $.Release.Namespace }}
+
+
+If using a LoadBalancer service type, retrieve the external IP address:
+{{- range $svc := .Values.microservices }}
+   kubectl get svc {{ $svc }} -n {{ $.Release.Namespace }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+{{- end }}
+
+##############################################
+# Application Configuration (application.yml)
+##############################################
+
+{{- if .Values.applicationYml }}
+applicationYml is set:
+{{ .Values.applicationYml | indent 4 }}
+{{- else }}
+applicationYml is NOT set or is empty.
+{{- end }}

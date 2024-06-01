@@ -1,0 +1,6 @@
+apiVersion: v2
+name: einvoice-helmrepo​
+description: A Helm chart for deploying 15 Java microservices in QA environment and 1 Front-end by reactJs
+type: application
+version: 0.1.0
+appVersion: "1.0"

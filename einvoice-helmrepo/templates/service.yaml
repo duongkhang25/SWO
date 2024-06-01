@@ -1,0 +1,55 @@
+{{- range $name, $service := .Values.microservices }}
+{{- if $service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}-service
+  namespace: imobill
+spec:
+  selector:
+    app: {{ $name }}
+  ports:
+    - protocol: TCP
+      port: {{ $service.port }}
+      targetPort: {{ $service.port }}
+---
+{{- end }}
+{{- end }}
+
+{{- if .Values.frontend.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.name }}-service
+  namespace: imobill
+spec:
+  selector:
+    app: {{ .Values.frontend.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.frontend.port }}
+      targetPort: {{ .Values.frontend.port }}
+---
+{{- end }}
+
+{{- if .Values.keycloak.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  type: {{ .Values.keycloak.service.type }}
+  ports:
+  {{- range .Values.keycloak.service.ports }}
+  - name: {{ .name }}
+    port: {{ .port }}
+    targetPort: {{ .targetPort }}
+  {{- end }}
+  selector:
+    app: keycloak
+{{- end }}
