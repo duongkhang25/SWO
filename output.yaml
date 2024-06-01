@@ -1,0 +1,524 @@
+'''
+helm template  einvoice-helmrepo ./einvoice-helmrepo --namespace imobill \
+  --set microservices.einvoice-audit-service.enabled=true \
+  --set microservices.einvoice-bill-gate.enabled=true \
+  -f ./einvoice-bill-gate/manifest/einvoice-bill-gate-value-prod.yaml \
+  -f ./einvoice-helmrepo/prod-values.yaml \
+  --set-file global.applicationYml=/Users/xuna/Desktop/SWO/einvoice-bill-gate/configmap/einvoice-bill-gate-configmap-prod.yml \
+  --set global.imageTag=10.0.0   \
+  --set global.hpa.enabled=true \
+  --debug
+'''
+
+---
+# Source: einvoice-helmrepo/templates/configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: einvoice-audit-service-config
+  namespace: imobill
+data:
+  application.yml: |-
+    server:
+      port: 8443
+      servlet:
+        context-path: /bill-gate
+      base-url: https://prod-imobill.xcyber.vn
+    
+    resource-server:
+      base-url: https://stg-accounts.xcyber.vn
+      realm: imobill
+      client-id: admin
+      username: admin
+      password: admin
+    
+    grpc:
+      server:
+        port: 6513
+      client:
+        audit-service:
+          address: 'static://auditservice:6501'
+        GLOBAL:
+          enable-keep-alive: true
+          keep-alive-without-calls: true
+          negotiation-type: plaintext
+    
+    spring:
+      application:
+        name: bill-gate-service
+      
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: ${resource-server.base-url}/auth/realms/${resource-server.realm}
+              jwk-set-uri: ${resource-server.base-url}/auth/realms/${resource-server.realm}/protocol/openid-connect/certs
+      jackson:
+        time-zone: Asia/Ho_Chi_Minh
+      datasource:
+        url: jdbc:postgresql://localhost:5432/imobillmaster
+        username: postgres
+        password: postgres
+        hikari:
+          max-lifetime: 30000
+          connection-timeout: 30000
+          maximum-pool-size: 25
+          driver-class-name: org.postgresql.Driver
+      jpa:
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        hibernate:
+          ddl-auto: none
+          naming:
+            implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+            physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        open-in-view: false
+        show-sql: off
+        properties:
+          hibernate:
+            format-sql: off
+            use-sql-comments: false
+      kafka:
+        bootstrap-servers: 10.30.1.187:9093
+        username: cyberid
+        password: cyberid@2022$$
+        sasl-mechanism: SCRAM-SHA-256
+        security:
+          protocol: SASL_PLAINTEXT
+        consumer:
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          auto-offset-reset: earliest
+          fetch-max-size: 10000000
+          thread: 3
+          topic:
+            search-irbm:
+              name: imobill-gatein-search
+              group-id: ${spring.kafka.consumer.topic.search-irbm.name}-group-id-local
+            input-gate:
+              name: imobill-input-gate
+              group-id: ${spring.kafka.consumer.topic.input-gate.name}-group-id-local
+        producer:
+          max-request-size: 10000000
+          topic:
+            output-gate: imobill-output-gate
+            imobill-output-gate-result-submit: imobill-output-gate-result-submit
+    
+    springdoc:
+      api-docs:
+        path: /api-docs
+      swagger-ui:
+        oauth:
+          client-id: api-document
+          client-secret: ZWSI3IRCeAUUtWB6yz6aOzWIU4iue6V2
+          use-pkce-with-authorization-code-grant: true
+        path: /document
+      packages-to-scan: com.service.controller.expose
+    
+    logging:
+      level:
+        com:
+          zaxxer:
+            hikari: off
+        org:
+          hibernate:
+            SQL: off
+            type:
+              descriptor:
+                sql:
+                  BasicBinder: off
+          springframework:
+            transaction: trace
+            web:
+              client:
+                RestTemplate: trace
+    
+    master-jdbc:
+      driver: org.postgresql.Driver
+      host: 10.30.1.22
+      port: 5432
+      database: imobillmaster
+      username: postgres
+      password: postgres
+      sql-get-tenant: select tn."ID", "Name", "DriverClassName", "Url", "Username", "Password" from "DataSourceConfig" tn where tn."Initialize" = true
+      check-list-tenant: false
+      list-tenant-name: null
+    
+    manual:
+      swagger:
+        title: Pre sign Service
+        token-url: ${resource-server.base-url}/auth/realms/${resource-server.realm}/protocol/openid-connect/token
+        auth-url: ${resource-server.base-url}/auth/realms/${resource-server.realm}/protocol/openid-connect/auth
+        server-url: ${server.base-url}${server.servlet.context-path}
+        security-name: IMoBill Authentication
+      security:
+        realm-access: realm-access
+        roles: roles
+      tenant-database:
+        minimum-idle: 5
+        maximum-pool-size: 10
+        connection-timeout: 30000
+        idle-timeout: 10000
+      thread-executor:
+        core-pool-size: 10
+        max-pool-size: 30
+        keep-alive-seconds: 10
+        blocking-queue-capacity: 100
+      minio:
+        url: http://10.30.1.199:9000
+        access-key: iqYrqcJZ8ESpVrjt
+        secret-key: Uwz6EFFwJCYPExYOT2m17aBGijurSMmX
+        bucket-name: imobill
+        region: us-east-1
+        irbm-path: /irbm-logging
+      irbm:
+        url: https://preprod-api.myinvois.hasil.gov.my
+        client-id: fc43321e-72d5-40a7-bde8-ea9fe55e3a1f
+        client-secret: 41f9dcd0-8986-43f1-a157-5cd479f0621c
+        grant-type: client_credentials
+        onbehalfof-key: onbehalfof
+        imocha-tin: C20852220040
+        scope: InvoicingAPI
+        validate-taxpayer-tin: ${manual.irbm.url}/api/v1.0/taxpayer/validate/{tin}?idType={idType}&idValue={idValue}
+        connect-token: ${manual.irbm.url}/connect/token
+        submit-document: ${manual.irbm.url}/api/v1.0/documentsubmissions
+        documents-details: ${manual.irbm.url}/api/v1.0/documents/{uuid}/details
+        format-xml: XML
+        format-json: JSON
+        sha-algorithm: SHA-256
+---
+# Source: einvoice-helmrepo/templates/configmap.yml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: einvoice-bill-gate-config
+  namespace: imobill
+data:
+  application.yml: |-
+    server:
+      port: 8443
+      servlet:
+        context-path: /bill-gate
+      base-url: https://prod-imobill.xcyber.vn
+    
+    resource-server:
+      base-url: https://stg-accounts.xcyber.vn
+      realm: imobill
+      client-id: admin
+      username: admin
+      password: admin
+    
+    grpc:
+      server:
+        port: 6513
+      client:
+        audit-service:
+          address: 'static://auditservice:6501'
+        GLOBAL:
+          enable-keep-alive: true
+          keep-alive-without-calls: true
+          negotiation-type: plaintext
+    
+    spring:
+      application:
+        name: bill-gate-service
+      
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: ${resource-server.base-url}/auth/realms/${resource-server.realm}
+              jwk-set-uri: ${resource-server.base-url}/auth/realms/${resource-server.realm}/protocol/openid-connect/certs
+      jackson:
+        time-zone: Asia/Ho_Chi_Minh
+      datasource:
+        url: jdbc:postgresql://localhost:5432/imobillmaster
+        username: postgres
+        password: postgres
+        hikari:
+          max-lifetime: 30000
+          connection-timeout: 30000
+          maximum-pool-size: 25
+          driver-class-name: org.postgresql.Driver
+      jpa:
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        hibernate:
+          ddl-auto: none
+          naming:
+            implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+            physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        open-in-view: false
+        show-sql: off
+        properties:
+          hibernate:
+            format-sql: off
+            use-sql-comments: false
+      kafka:
+        bootstrap-servers: 10.30.1.187:9093
+        username: cyberid
+        password: cyberid@2022$$
+        sasl-mechanism: SCRAM-SHA-256
+        security:
+          protocol: SASL_PLAINTEXT
+        consumer:
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          auto-offset-reset: earliest
+          fetch-max-size: 10000000
+          thread: 3
+          topic:
+            search-irbm:
+              name: imobill-gatein-search
+              group-id: ${spring.kafka.consumer.topic.search-irbm.name}-group-id-local
+            input-gate:
+              name: imobill-input-gate
+              group-id: ${spring.kafka.consumer.topic.input-gate.name}-group-id-local
+        producer:
+          max-request-size: 10000000
+          topic:
+            output-gate: imobill-output-gate
+            imobill-output-gate-result-submit: imobill-output-gate-result-submit
+    
+    springdoc:
+      api-docs:
+        path: /api-docs
+      swagger-ui:
+        oauth:
+          client-id: api-document
+          client-secret: ZWSI3IRCeAUUtWB6yz6aOzWIU4iue6V2
+          use-pkce-with-authorization-code-grant: true
+        path: /document
+      packages-to-scan: com.service.controller.expose
+    
+    logging:
+      level:
+        com:
+          zaxxer:
+            hikari: off
+        org:
+          hibernate:
+            SQL: off
+            type:
+              descriptor:
+                sql:
+                  BasicBinder: off
+          springframework:
+            transaction: trace
+            web:
+              client:
+                RestTemplate: trace
+    
+    master-jdbc:
+      driver: org.postgresql.Driver
+      host: 10.30.1.22
+      port: 5432
+      database: imobillmaster
+      username: postgres
+      password: postgres
+      sql-get-tenant: select tn."ID", "Name", "DriverClassName", "Url", "Username", "Password" from "DataSourceConfig" tn where tn."Initialize" = true
+      check-list-tenant: false
+      list-tenant-name: null
+    
+    manual:
+      swagger:
+        title: Pre sign Service
+        token-url: ${resource-server.base-url}/auth/realms/${resource-server.realm}/protocol/openid-connect/token
+        auth-url: ${resource-server.base-url}/auth/realms/${resource-server.realm}/protocol/openid-connect/auth
+        server-url: ${server.base-url}${server.servlet.context-path}
+        security-name: IMoBill Authentication
+      security:
+        realm-access: realm-access
+        roles: roles
+      tenant-database:
+        minimum-idle: 5
+        maximum-pool-size: 10
+        connection-timeout: 30000
+        idle-timeout: 10000
+      thread-executor:
+        core-pool-size: 10
+        max-pool-size: 30
+        keep-alive-seconds: 10
+        blocking-queue-capacity: 100
+      minio:
+        url: http://10.30.1.199:9000
+        access-key: iqYrqcJZ8ESpVrjt
+        secret-key: Uwz6EFFwJCYPExYOT2m17aBGijurSMmX
+        bucket-name: imobill
+        region: us-east-1
+        irbm-path: /irbm-logging
+      irbm:
+        url: https://preprod-api.myinvois.hasil.gov.my
+        client-id: fc43321e-72d5-40a7-bde8-ea9fe55e3a1f
+        client-secret: 41f9dcd0-8986-43f1-a157-5cd479f0621c
+        grant-type: client_credentials
+        onbehalfof-key: onbehalfof
+        imocha-tin: C20852220040
+        scope: InvoicingAPI
+        validate-taxpayer-tin: ${manual.irbm.url}/api/v1.0/taxpayer/validate/{tin}?idType={idType}&idValue={idValue}
+        connect-token: ${manual.irbm.url}/connect/token
+        submit-document: ${manual.irbm.url}/api/v1.0/documentsubmissions
+        documents-details: ${manual.irbm.url}/api/v1.0/documents/{uuid}/details
+        format-xml: XML
+        format-json: JSON
+        sha-algorithm: SHA-256
+---
+# Source: einvoice-helmrepo/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: einvoice-audit-service-service
+  namespace: imobill
+spec:
+  selector:
+    app: einvoice-audit-service
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+---
+# Source: einvoice-helmrepo/templates/service.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: einvoice-bill-gate-service
+  namespace: imobill
+spec:
+  selector:
+    app: einvoice-bill-gate
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+---
+# Source: einvoice-helmrepo/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: einvoice-audit-service-deployment
+  namespace: imobill
+  labels:
+    app: einvoice-audit-service
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: einvoice-audit-service
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: einvoice-audit-service
+        environment: production
+    spec:
+      imagePullSecrets:
+        - name: my-registry-key-prod
+      containers:
+        - name: einvoice-audit-service
+          image: <prod-aws_account_id>.dkr.ecr.<region>.amazonaws.com/einvoice-audit-service:10.0.0
+          ports:
+            - containerPort: 8443
+          resources:
+            requests:
+              cpu: 2
+              memory: 2Gb
+            limits:
+              cpu: 4
+              memory: 4Gb
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config/application.yml
+              subPath: application.yml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: einvoice-audit-service-config
+---
+# Source: einvoice-helmrepo/templates/deployment.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: einvoice-bill-gate-deployment
+  namespace: imobill
+  labels:
+    app: einvoice-bill-gate
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: einvoice-bill-gate
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: einvoice-bill-gate
+        environment: production
+    spec:
+      imagePullSecrets:
+        - name: my-registry-key-prod
+      containers:
+        - name: einvoice-bill-gate
+          image: <prod-aws_account_id>.dkr.ecr.<region>.amazonaws.com/einvoice-bill-gate:10.0.0
+          ports:
+            - containerPort: 8443
+          resources:
+            requests:
+              cpu: 2
+              memory: 2Gb
+            limits:
+              cpu: 4
+              memory: 4Gb
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config/application.yml
+              subPath: application.yml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: einvoice-bill-gate-config
+---
+# Source: einvoice-helmrepo/templates/hpa.yaml
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: einvoice-audit-service-hpa
+  namespace: imobill
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: einvoice-audit-service-deployment
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# Source: einvoice-helmrepo/templates/hpa.yaml
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: einvoice-bill-gate-hpa
+  namespace: imobill
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: einvoice-bill-gate-deployment
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80

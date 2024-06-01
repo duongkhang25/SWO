@@ -11,8 +11,8 @@ spec:
     app: {{ $name }}
   ports:
     - protocol: TCP
-      port: {{ $service.port }}
-      targetPort: {{ $service.port }}
+      port: {{ $service.port | default 8443  }}
+      targetPort: {{ $service.port | default 8443 }}
 ---
 {{- end }}
 {{- end }}

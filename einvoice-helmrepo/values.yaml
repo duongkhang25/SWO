@@ -1,4 +1,6 @@
 global:
+  applicationYml: |-
+    ""
   imagePullSecrets:
     - name: my-registry-key
   environment: qa
@@ -17,7 +19,7 @@ global:
     minReplicas: 1
     maxReplicas: 5
     targetCPUUtilizationPercentage: 80
-applicationYml: ""
+
 
 keycloak:
   enabled: false
@@ -110,3 +112,4 @@ ingress:
     nginx.ingress.kubernetes.io/affinity-mode: persistent
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
   host: mydomain.com
+

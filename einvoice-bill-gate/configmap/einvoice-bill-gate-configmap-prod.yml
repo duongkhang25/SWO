@@ -1,8 +1,8 @@
 server:
-  port: 5513
+  port: 8443
   servlet:
     context-path: /bill-gate
-  base-url: https://dev-imobill.xcyber.vn
+  base-url: https://prod-imobill.xcyber.vn
 
 resource-server:
   base-url: https://stg-accounts.xcyber.vn

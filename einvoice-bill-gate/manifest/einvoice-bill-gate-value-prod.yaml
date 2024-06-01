@@ -1,6 +1,6 @@
 global:
-  replicas: 2
-  environment: qa
+  replicas: 5
+  environment: production
   resources:
     requests:
       memory: "256Mi"

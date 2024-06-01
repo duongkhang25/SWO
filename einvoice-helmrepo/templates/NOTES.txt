@@ -22,17 +22,22 @@ To verify the deployment, run the following commands:
    kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}
 
 5. Get the backend-services details:
-{{- range $svc := .Values.microservices }}
-   kubectl get svc {{ $svc }} -n {{ $.Release.Namespace }}
+{{- range $name, $svc := .Values.microservices }}
+   kubectl get svc {{ $name }}-service -n {{ $.Release.Namespace }}
 {{- end }}
 
 6. Get the Frontend-services details:
    kubectl get svc {{ .Values.frontend.name }} -n {{ $.Release.Namespace }}
 
 
-If using a LoadBalancer service type, retrieve the external IP address:
-{{- range $svc := .Values.microservices }}
-   kubectl get svc {{ $svc }} -n {{ $.Release.Namespace }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+---------------------------------DEBUG---------------------------
+{{- range $name, $svc := .Values.microservices }}
+{{- if $svc.enabled }}
+   Service: {{ $name }}
+   Service_enabled: {{ $svc.enabled | default "not set" }}
+   port: {{ $svc.port | default "port not set" }}
+   targetPort: {{ $svc.targetPort | default "targetPort not set" }}
+{{- end }}
 {{- end }}
 
 ##############################################
@@ -41,7 +46,14 @@ If using a LoadBalancer service type, retrieve the external IP address:
 
 {{- if .Values.applicationYml }}
 applicationYml is set:
-{{ .Values.applicationYml | indent 4 }}
+{{- toYaml .Values.applicationYml | nindent 4 }}
 {{- else }}
 applicationYml is NOT set or is empty.
+{{- end }}
+
+
+-----------------------------------------------------------------
+If using a LoadBalancer service type, retrieve the external IP address:
+{{- range $name, $svc := .Values.microservices }}
+   kubectl get svc {{ $name }} -n {{ $.Release.Namespace }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
 {{- end }}

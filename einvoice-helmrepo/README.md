@@ -54,8 +54,27 @@ einvoice-service-name/
 
 - To deploy only specific services, you can use a custom values file or the --set option with Helm.
 
+**QA Env**
+```helm upgrade --install  einvoice-helmrepo ./einvoice-helmrepo --namespace imobill \
+  --set microservices.bill-gate.enabled=true \
+  -f ./einvoice-bill-gate/manifest/einvoice-bill-gate-value-qa.yaml \
+  --set-file global.applicationYml=/Users/xuna/Desktop/SWO/einvoice-bill-gate/configmap/einvoice-bill-gate-configmap-qa.yml \
+  --set global.imageTag=10.0.0   \
+  --set global.hpa.enabled=true \
+  --debug
+  ```
 
- ** helm upgrade --install einvoice-helmrepo​ ./einvoice-helmrepo​ --namespace imobill -f applicationrepo/manifest/service-name-values-qa.yaml  --set-file application.yml=applicationrepo/config/audit-service-configmap-qa.yaml --set microservices.bill-gate.enabled=true  --set frontend.enabled=false  --set global.imageTag=10.0.0   **
+**PROD Env**
+```helm template  einvoice-helmrepo ./einvoice-helmrepo --namespace imobill \
+  --set microservices.bill-gate.enabled=true \
+  --set microservices.einvoice-audit-service.enabled=true \
+  -f ./einvoice-bill-gate/manifest/einvoice-bill-gate-value-prod.yaml \
+  -f ./einvoice-helmrepo/prod-values.yaml \
+  --set-file global.applicationYml=/Users/xuna/Desktop/SWO/einvoice-bill-gate/configmap/einvoice-bill-gate-configmap-prod.yml \
+  --set global.imageTag=10.0.0   \
+  --set global.hpa.enabled=true \
+  --debug
+  ```
 
 # To create secret for cert and key use for ingress https forward
 

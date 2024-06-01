@@ -8,17 +8,7 @@ metadata:
   namespace: imobill
 data:
   application.yml: |-
-{{- if .Values.applicationYml }}
-{{ .Values.applicationYml | indent 4 }}
-{{- else }}
-# applicationYml is NOT set or is empty.
-{{- end }}
+{{ $.Values.global.applicationYml | indent 4}}
 ---
 {{- end }}
 {{- end }}
-
-
-
-
-# helm upgrade --install einvoice-helmrepo​ ./einvoice-helmrepo​ --namespace imobill   --set-file application.yml=applicationrepo/config/audit-service-configmap-qa.yaml
-
