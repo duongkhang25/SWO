@@ -30,7 +30,9 @@ To verify the deployment, run the following commands:
    kubectl get svc {{ .Values.frontend.name }} -n {{ $.Release.Namespace }}
 
 
----------------------------------DEBUG---------------------------
+----------------------------DEBUG--------------------------------
+----------###DECODE THE VALUE IN HELM FOR DUBUGGING###-----------
+
 {{- range $name, $svc := .Values.microservices }}
 {{- if $svc.enabled }}
    Service: {{ $name }}
@@ -40,13 +42,13 @@ To verify the deployment, run the following commands:
 {{- end }}
 {{- end }}
 
-##############################################
-# Application Configuration (application.yml)
-##############################################
+###########################################################
+#        Application Configuration (application.yml)      #
+###########################################################
 
 {{- if .Values.applicationYml }}
 applicationYml is set:
-{{- toYaml .Values.applicationYml | nindent 4 }}
+{{- toYaml $.Values.global.applicationYml | nindent 4 }}
 {{- else }}
 applicationYml is NOT set or is empty.
 {{- end }}

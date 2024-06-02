@@ -55,17 +55,19 @@ einvoice-service-name/
 - To deploy only specific services, you can use a custom values file or the --set option with Helm.
 
 **QA Env**
-```helm upgrade --install  einvoice-helmrepo ./einvoice-helmrepo --namespace imobill \
+```
+helm upgrade --install  einvoice-helmrepo ./einvoice-helmrepo --namespace imobill \
   --set microservices.bill-gate.enabled=true \
   -f ./einvoice-bill-gate/manifest/einvoice-bill-gate-value-qa.yaml \
   --set-file global.applicationYml=/Users/xuna/Desktop/SWO/einvoice-bill-gate/configmap/einvoice-bill-gate-configmap-qa.yml \
   --set global.imageTag=10.0.0   \
   --set global.hpa.enabled=true \
   --debug
-  ```
+```
 
 **PROD Env**
-```helm template  einvoice-helmrepo ./einvoice-helmrepo --namespace imobill \
+```
+helm template  einvoice-helmrepo ./einvoice-helmrepo --namespace imobill \
   --set microservices.bill-gate.enabled=true \
   --set microservices.einvoice-audit-service.enabled=true \
   -f ./einvoice-bill-gate/manifest/einvoice-bill-gate-value-prod.yaml \
@@ -74,7 +76,7 @@ einvoice-service-name/
   --set global.imageTag=10.0.0   \
   --set global.hpa.enabled=true \
   --debug
-  ```
+```
 
 # To create secret for cert and key use for ingress https forward
 
@@ -84,7 +86,8 @@ kubectl create secret tls my-tls-secret --cert=path/to/tls.crt --key=path/to/tls
 
 # Create the secret for image pull secret from registry ECR:
 
-```aws ecr get-login-password --region <region> | kubectl create secret docker-registry my-registry-key --docker-server=<aws_account_id>.dkr.ecr.<region>.amazonaws.com --docker-username=AWS --docker-password-stdin
+```
+aws ecr get-login-password --region <region> | kubectl create secret docker-registry my-registry-key --docker-server=<aws_account_id>.dkr.ecr.<region>.amazonaws.com --docker-username=AWS --docker-password-stdin
 ```
 
 # Set up AWS Load Balancer Controller
@@ -99,7 +102,8 @@ kubectl create secret tls my-tls-secret --cert=path/to/tls.crt --key=path/to/tls
 1. **set up AWS Load Balancer Controller**
 Create IAM policy:
 
-```curl -o iam_policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
+```
+url -o iam_policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
 
 aws iam create-policy \
     --policy-name AWSLoadBalancerControllerIAMPolicy \
@@ -108,7 +112,8 @@ aws iam create-policy \
 
 Create IAM Role and Policy attach
 
-```eksctl create iamserviceaccount \
+```
+eksctl create iamserviceaccount \
   --cluster <your-cluster-name> \
   --namespace kube-system \
   --name aws-load-balancer-controller \
@@ -118,7 +123,8 @@ Create IAM Role and Policy attach
 
 Setting AWS Load Balancer Controller
 
-```helm repo add eks https://aws.github.io/eks-charts
+```
+helm repo add eks https://aws.github.io/eks-charts
 helm repo update
 
 helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
@@ -129,10 +135,6 @@ helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-contro
   --set vpcId=<your-vpc-id> \
   --set serviceAccount.name=aws-load-balancer-controller
 ```
-
-Upgrade the helmChart:
-
-helm upgrade --install einvoice-helmrepo​ ./einvoice-helmrepo​ --namespace imobill
 
 The Traffic Flow:
 
