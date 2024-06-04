@@ -231,3 +231,12 @@ graph TD;
     F2 --> F4
     F3 --> F4
 ```
+## KeyCloak ##
+
+**Secret**
+
+kubectl create secret generic keycloak-db-credentials \
+  --from-literal=db_keycloak_username=my-db-user \
+  --from-literal=db_keycloak_password=my-db-password \
+  --namespace your-namespace
+  

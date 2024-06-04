@@ -97,6 +97,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
+  namespace: {{ .Release.Namespace }}
   labels:
     app: keycloak
 spec:
@@ -112,18 +113,23 @@ spec:
       containers:
       - name: keycloak
         image: {{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}
-        env:
-        {{- range $key, $value := .Values.keycloak.env }}
-        - name: "{{ $key }}"
-          value: "{{ $value }}"
-        {{- end }}
         ports:
-        {{- range .Values.keycloak.service.ports }}
+        - containerPort: {{ .Values.keycloak.service.port }}
+        env:
+        {{- range .Values.keycloak.env }}
         - name: {{ .name }}
-          containerPort: {{ .containerPort }}
+          value: {{ .value | quote }}
+          {{- if .valueFrom }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .valueFrom.secretKeyRef.name }}
+              key: {{ .valueFrom.secretKeyRef.key }}
+          {{- end }}
         {{- end }}
       imagePullSecrets:
       {{- range .Values.keycloak.imagePullSecrets }}
       - name: {{ . }}
       {{- end }}
+---
 {{- end }}
+

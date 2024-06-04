@@ -38,5 +38,14 @@ spec:
                 port:
                   number: {{ .Values.frontend.port }}
 {{- end }}
+{{- if .Values.keycloak.enabled }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.keycloak.name }}-service
+                port:
+                  number: {{ .Values.keycloak.port }}
+{{- end }}
 ---
 {{- end }}
