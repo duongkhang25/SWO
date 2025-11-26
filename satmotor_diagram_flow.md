@@ -58,6 +58,10 @@ All current branches are configured with protection rules and can only be merged
 ### 1. Git Graph - Branch Structure
 
 ```mermaid
+---
+config:
+  theme: redux-color
+---
 gitGraph
     commit id: "Initial"
     
@@ -82,20 +86,24 @@ gitGraph
     checkout feature/new-feature
     commit id: "Feature Development"
     
+
     checkout DEV
-    merge feature/new-feature
+    merge feature/new-feature 
     commit id: "PR Approved - Deploy to DEV"
     
     checkout UATBAU
     merge DEV
+    merge feature/new-feature
     commit id: "PR Approved - Deploy to UATBAU"
     
     checkout UATPROJ
-    merge DEV
+    merge feature/new-feature
     commit id: "PR Approved - Deploy to UATPROJ"
     
     checkout PRE-PROD
+    merge DEV
     merge UATBAU
+    merge feature/new-feature
     commit id: "PR + Manager Review - Deploy to PRE-PROD"
     commit id: "PRE-PROD Build & Test Done"
     commit id: "Promotion Pipeline - Image to PROD ECR"
